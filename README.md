@@ -33,7 +33,7 @@ open [http://localhost:8080/](http://localhost:8080/) to go to the Jupyter Noteb
 
 Launch [tensorbord](https://www.tensorflow.org/tensorboard) for monitoring the training
 ```bash
-#tensorboard --logdir  >& /dev/null &
+tensorboard --logdir <LOGDIR> --port=<PORT>  >& /dev/null &
 #tensorboard --logdir workarea/ml/attention4HHH/checkpoints/trippleHiggsVsQCD/lightning_logs/ --port=8008 >& /dev/null &
 ```
 
