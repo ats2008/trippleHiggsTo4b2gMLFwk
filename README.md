@@ -2,6 +2,7 @@
 
 ML Framework for developing models for HHH-->4b 2g 
 
+Development was based on these [course notebooks](https://uvadlc-notebooks.readthedocs.io/en/latest/index.html).
 
 ## Setup
 

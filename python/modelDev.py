@@ -189,14 +189,10 @@ test_loader  = data.DataLoader(test_dataset,  batch_size=64, shuffle=False, drop
 
 
 # ## Model Defenition
-
-from TransformerModel import *
-
-
 # Needed for initializing the lr scheduler
-p = nn.Parameter(torch.empty(4,4))
-optimizer = optim.Adam([p], lr=1e-3)
-lr_scheduler = CosineWarmupScheduler(optimizer=optimizer, warmup=100, max_iters=2000)
+#p = nn.Parameter(torch.empty(4,4))
+#optimizer = optim.Adam([p], lr=1e-3)
+#lr_scheduler = CosineWarmupScheduler(optimizer=optimizer, warmup=100, max_iters=2000)
 
 # Plotting
 # epochs = list(range(2000))
@@ -212,30 +208,6 @@ lr_scheduler = CosineWarmupScheduler(optimizer=optimizer, warmup=100, max_iters=
 
 # In[35]:
 
-
-class trippleHNonResonatModel(TransformerPredictor):
-    def _calculate_loss(self, batch, mode="train"):
-        features, _, labels = batch
-        preds = self.forward(features, add_positional_encoding=False) # No positional encodings as it is a set, not a sequence!
-        preds = preds.squeeze(dim=-1) # Shape: [Batch_size, set_size]
-        loss = F.cross_entropy(preds, labels) # Softmax/CE over set dimension
-        acc = (preds.argmax(dim=-1) == labels).float().mean()
-        #auc = roc_auc_score(  labels  , preds  )
-        self.log(f"{mode}_loss", loss)
-        self.log(f"{mode}_acc", acc, on_step=False, on_epoch=True)
-        #self.log(f"{mode}_roc", auc, on_step=False, on_epoch=True)
-
-        return loss, acc
-
-    def training_step(self, batch, batch_idx):
-        loss, _ = self._calculate_loss(batch, mode="train")
-        return loss
-
-    def validation_step(self, batch, batch_idx):
-        _ = self._calculate_loss(batch, mode="val")
-
-    def test_step(self, batch, batch_idx):
-        _ = self._calculate_loss(batch, mode="test")
 
 
 # ### training the Model
