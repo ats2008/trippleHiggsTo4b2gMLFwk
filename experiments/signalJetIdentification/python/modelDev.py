@@ -48,10 +48,12 @@ print("Device:", device)
 # In[3]:
 
 
+def getDataset(dataFileNames,inputVarList,labelVars,testTrainSplit=0.1,randomize=True,seedVal=42,nSigEvts=-1,nBkgEvts=-1):
+    bkgDataset,bkgLabl=mlUtil.readDataset(dataFileNames['bkg'],labelVars,'bkg_13TeV_TrippleHTag_0_background',
+                                          inputVarList,NEVTS=nSigEvts)
+    sigDataset,sigLabl=mlUtil.readDataset(dataFileNames['sig'],labelVars,'ggHHH_125_13TeV_allRecoed',
+                                          inputVarList,NEVTS=nBkgEvts)
 
-def getDataset(dataFileNames,inputVarList,labelVars,testTrainSplit=0.1,randomize=True,seedVal=42):
-    bkgDataset,bkgLabl=mlUtil.readDataset(dataFileNames['bkg'],labelVars,'bkg_13TeV_TrippleHTag_0_background',inputVarList,NEVTS=20000)
-    sigDataset,sigLabl=mlUtil.readDataset(dataFileNames['sig'],labelVars,'ggHHH_125_13TeV_allRecoed',inputVarList,NEVTS=-1)
     dataset=torch.cat([bkgDataset,sigDataset],0)
     label=torch.cat([bkgLabl,sigLabl],0)
     bkgMem=sys.getsizeof(bkgDataset.storage())/1e6
@@ -134,9 +136,9 @@ def getTestTrainDataLoaders(dataFileNames,inputVarList,labelVars,getDataLoader=T
     val_dataset   = trippleHDataset(val_feats  ,   val_labels, train=False)
     test_dataset  = trippleHDataset(test_feats ,  test_labels, train=False)
     
-    train_loader = data.DataLoader(train_dataset, batch_size=64, shuffle=True,  drop_last=True,  num_workers=4, pin_memory=True)
-    val_loader   = data.DataLoader(val_dataset,   batch_size=64, shuffle=False, drop_last=False, num_workers=4)
-    test_loader  = data.DataLoader(test_dataset,  batch_size=64, shuffle=False, drop_last=False, num_workers=4)
+    train_loader = data.DataLoader(train_dataset, batch_size=256, shuffle=True,  drop_last=True,  num_workers=4, pin_memory=True)
+    val_loader   = data.DataLoader(val_dataset,   batch_size=256, shuffle=False, drop_last=False, num_workers=4)
+    test_loader  = data.DataLoader(test_dataset,  batch_size=256, shuffle=False, drop_last=False, num_workers=4)
 
     return train_loader,val_loader,test_loader
 
@@ -154,6 +156,7 @@ def train_hhhVsQCD(train_loader,val_loader,test_loader,maxEpoch,version=None,CHE
                          gpus=1 if str(device).startswith("cuda") else 0,
                          max_epochs=maxEpoch,
                          gradient_clip_val=2)
+    trainer.val_check_interval=0.05
     trainer.logger._default_hp_metric = None # Optional logging argument that we don't need
     hpars=copy.deepcopy(kwargs)
     if 'inputVarList' in hpars:
@@ -221,18 +224,14 @@ if __name__=="__main__":
     print("Number of Input variables : ",len(inputVarList))
     print("Number of Input Labels : ",len(labelVars))
     
-    
-    
     dataFileNames={
         'sig':{
-            'ggHHH':'/home/asugunan/work/trippleHiggs/ml/workarea/batch/ntupleForML/ggHHHto4b2gamma_UL17_13TeV_v2.root'
+             'ggHHH' : '/grid_mnt/t3storage3/asugunan/store/trippleHiggs/mlNtuples/MC/2018//ggHHH/ml_ggHHH_1p0.root'
         },
         'bkg':{
-            'ggM80Inc':'/home/asugunan/work/trippleHiggs/ml/workarea/batch/ntupleForMLBkg/DiPhotonJetsBox_MGG-80toInf_13TeV-sherpa.root',
-    #         'ggM80Jbox1bjet':
-            'ggM80Jbox2bjet':'/home/asugunan/work/trippleHiggs/ml/workarea/batch/ntupleForMLBkg/DiPhotonJetsBox2BJets_MGG-80toInf_13TeV-sherpa.root'
-    #         'gJet20To40'  :
-    #         'gJet40ToInf' :
+            'ggM80Jbox2bjet' :'/grid_mnt/t3storage3/asugunan/store/trippleHiggs/mlNtuples/MC/2018/diphotonX/ml_diPhoton2B_1p0.root',
+            'ggM80Jbox1bjet' :'/grid_mnt/t3storage3/asugunan/store/trippleHiggs/mlNtuples/MC/2018/diphotonX/ml_diPhoton1B_1p0.root',
+            'ggM80Inc' :'/grid_mnt/t3storage3/asugunan/store/trippleHiggs/mlNtuples/MC/2018/diphotonX/ml_diPhoton_1p0.root'
         }
     }
 
@@ -248,7 +247,7 @@ if __name__=="__main__":
                                                   remark=tag,
                                                   CHECKPOINT_PATH=CHECKPOINT_PATH,
 	    				                          input_dim=19,
-                                                  model_dim=64,
+                                                  model_dim=128,
                                                   num_heads=32,
                                                   num_classes=2,
                                                   num_layers=16,

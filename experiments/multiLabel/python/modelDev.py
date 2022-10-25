@@ -136,9 +136,9 @@ def getTestTrainDataLoaders(dataFileNames,inputVarList,labelVars,getDataLoader=T
     val_dataset   = trippleHDataset(val_feats  ,   val_labels, train=False)
     test_dataset  = trippleHDataset(test_feats ,  test_labels, train=False)
     
-    train_loader = data.DataLoader(train_dataset, batch_size=64, shuffle=True,  drop_last=True,  num_workers=4, pin_memory=True)
-    val_loader   = data.DataLoader(val_dataset,   batch_size=64, shuffle=False, drop_last=False, num_workers=4)
-    test_loader  = data.DataLoader(test_dataset,  batch_size=64, shuffle=False, drop_last=False, num_workers=4)
+    train_loader = data.DataLoader(train_dataset, batch_size=256, shuffle=True,  drop_last=True,  num_workers=4, pin_memory=True)
+    val_loader   = data.DataLoader(val_dataset,   batch_size=256, shuffle=False, drop_last=False, num_workers=4)
+    test_loader  = data.DataLoader(test_dataset,  batch_size=256, shuffle=False, drop_last=False, num_workers=4)
 
     return train_loader,val_loader,test_loader
 
@@ -157,6 +157,7 @@ def train_hhhVsQCD(train_loader,val_loader,test_loader,maxEpoch,version=None,CHE
                          max_epochs=maxEpoch,
                          gradient_clip_val=2)
     trainer.logger._default_hp_metric = None # Optional logging argument that we don't need
+    trainer.val_check_interval=0.05
     hpars=copy.deepcopy(kwargs)
     if 'inputVarList' in hpars:
         hpars['inputVarList']=str(hpars['inputVarList'])
@@ -227,14 +228,12 @@ if __name__=="__main__":
     
     dataFileNames={
         'sig':{
-            'ggHHH':'/home/asugunan/work/trippleHiggs/ml/workarea/batch/ntupleForML/ggHHHto4b2gamma_UL17_13TeV_v2.root'
+            'ggHHH' : '/grid_mnt/t3storage3/asugunan/store/trippleHiggs/mlNtuples/MC/2018//ggHHH/ml_ggHHH_1p0.root'
         },
         'bkg':{
-            'ggM80Inc':'/home/asugunan/work/trippleHiggs/ml/workarea/batch/ntupleForMLBkg/DiPhotonJetsBox_MGG-80toInf_13TeV-sherpa.root',
-    #         'ggM80Jbox1bjet':
-            'ggM80Jbox2bjet':'/home/asugunan/work/trippleHiggs/ml/workarea/batch/ntupleForMLBkg/DiPhotonJetsBox2BJets_MGG-80toInf_13TeV-sherpa.root'
-    #         'gJet20To40'  :
-    #         'gJet40ToInf' :
+        'ggM80Jbox2bjet' :'/grid_mnt/t3storage3/asugunan/store/trippleHiggs/mlNtuples/MC/2018/diphotonX/ml_diPhoton2B_1p0.root',
+        'ggM80Jbox1bjet' :'/grid_mnt/t3storage3/asugunan/store/trippleHiggs/mlNtuples/MC/2018/diphotonX/ml_diPhoton1B_1p0.root',
+        'ggM80Inc' :'/grid_mnt/t3storage3/asugunan/store/trippleHiggs/mlNtuples/MC/2018/diphotonX/ml_diPhoton_1p0.root'
         }
     }
 
@@ -251,9 +250,9 @@ if __name__=="__main__":
                                                   CHECKPOINT_PATH=CHECKPOINT_PATH,
 	    				                          input_dim=19,
                                                   model_dim=128,
-                                                  num_heads=32,
+                                                  num_heads=64,
                                                   num_classes=5,
-                                                  num_layers=16,
+                                                  num_layers=32,
                                                   dropout=0.1,
                                                   input_dropout=0.0,
                                                   lr=5e-4,
