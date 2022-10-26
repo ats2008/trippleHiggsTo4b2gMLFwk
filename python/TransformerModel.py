@@ -39,6 +39,9 @@ def scaled_dot_product(q, k, v, mask=None):
     attn_logits = torch.matmul(q, k.transpose(-2, -1))
     attn_logits = attn_logits / math.sqrt(d_k)
     if mask is not None:
+        nHeads=attn_logits.shape[-3]
+        mask=mask.unsqueeze(dim=-3)
+        mask=torch.repeat_interleave(mask,nHeads,dim=-3)
         attn_logits = attn_logits.masked_fill(mask == 0, -9e15)
     attention = F.softmax(attn_logits, dim=-1)
     values = torch.matmul(attention, v)
@@ -58,7 +61,6 @@ class MultiheadAttention(nn.Module):
         self.embed_dim = embed_dim
         self.num_heads = num_heads
         self.head_dim = embed_dim // num_heads
-
         # Stack all weight matrices 1...h together for efficiency
         # Note that in many implementations you see "bias=False" which is optional
         self.qkv_proj = nn.Linear(input_dim, 3*embed_dim)
