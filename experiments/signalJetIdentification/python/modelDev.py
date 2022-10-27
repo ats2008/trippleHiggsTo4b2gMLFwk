@@ -62,8 +62,7 @@ def getDataset(dataFileNames,inputVarList,labelVars,isvalidMaskVar=None,
     dataset=torch.cat([bkgDataset,sigDataset],0)
     label=torch.cat([bkgLabl,sigLabl],0)
     mask=torch.cat([bkgMask,sigMask],0)
-    
-    
+
     bkgMem=sys.getsizeof(bkgDataset.storage())/1e6
     sigMem=sys.getsizeof(sigDataset.storage())/1e6
     print("Total number of Signal Events     : ",sigDataset.shape[0]," [ ",sigMem," MB ]")
@@ -77,7 +76,6 @@ def getDataset(dataFileNames,inputVarList,labelVars,isvalidMaskVar=None,
         label=label[permut]
         mask=mask[permut]
     test_count = int(min(bkgDataset.shape[0],sigDataset.shape[0])/10.0)
-    
     data_test   = dataset[:test_count]
     label_test = label[:test_count]
     mask_test = mask[:test_count]
@@ -124,7 +122,7 @@ def getTestTrainDataLoaders(dataFileNames,inputVarList,labelVars,isvalidMaskVar=
     print("Total number of events for training : ",labels_train.shape[0],"(",sum(signalMask),"+",sum(bkgMask),")")
     
     num_val_exmps = int(min(len(sorted_indices[0]),len(sorted_indices[1]))/10)
-    print("Setting number of Vaidation elements as  ",num_val_exmps)
+    print("Setting number of Vaidation sig[bkg] elements as  ",num_val_exmps)
     
     # Get image indices for validation and training
     val_indices   = sorted_indices[0][:num_val_exmps]
@@ -179,8 +177,8 @@ def train_hhhVsQCD(train_loader,val_loader,test_loader,
                          gpus=1 if str(device).startswith("cuda") else 0,
                          max_epochs=maxEpoch,
                          gradient_clip_val=2)
-    trainer.val_check_interval=0.05
     trainer.logger._default_hp_metric = None # Optional logging argument that we don't need
+    trainer.val_check_interval=0.05
     hpars=copy.deepcopy(kwargs)
     if 'inputVarList' in hpars:
         hpars['inputVarList']=str(hpars['inputVarList'])
@@ -198,17 +196,12 @@ def train_hhhVsQCD(train_loader,val_loader,test_loader,
         trainer.fit(model, train_loader, val_loader)
         model = trippleHNonResonatModel.load_from_checkpoint(trainer.checkpoint_callback.best_model_path)
 
-    result={"test_acc" : 0.0,
-            "val_acc"  : 0.0, 
-            "train_acc": 0.0}
-    
     # Test best model on validation and test set
     train_result = trainer.test(model, train_loader, verbose=False)
     val_result   = trainer.test(model, val_loader, verbose=False)
     test_result  = trainer.test(model, test_loader, verbose=False)
     result = {"test_acc": test_result[0]["test_acc"], "val_acc": val_result[0]["test_acc"], "train_acc": train_result[0]["test_acc"]}
     model = model.to(device)
-
     return model, trainer,result
 
 def load_model(CHECKPOINT_PATH='./chkpt.tmp',**kwargs):
@@ -269,7 +262,7 @@ if __name__=="__main__":
     
     dataFileNames={
         'sig':{
-             'ggHHH' : '/grid_mnt/t3storage3/asugunan/store/trippleHiggs/mlNtuples/MC/2018//ggHHH/ml_ggHHH_1p0.root'
+            'ggHHH' : '/grid_mnt/t3storage3/asugunan/store/trippleHiggs/mlNtuples/MC/2018//ggHHH/ml_ggHHH_1p0.root'
         },
         'bkg':{
             'ggM80Jbox2bjet' :'/grid_mnt/t3storage3/asugunan/store/trippleHiggs/mlNtuples/MC/2018/diphotonX/ml_diPhoton2B_1p0.root',
@@ -282,7 +275,7 @@ if __name__=="__main__":
                                                                   labelVars,isvalidMaskVar=isvalidMaskVar,
                                                                   nSigEvts=-1,nBkgEvts=-1)
 
-    train_sample,_,_=train_loader.dataset[0];
+    train_sample,mask,_=train_loader.dataset[0];
 
     print("Tarining The model !!  ",train_sample[-1].shape)
 

@@ -17,33 +17,29 @@ class trippleHDataset(data.Dataset):
         self.mask = masks
         if masks==None:
             print("Initializing with default mask ")
-            self.mask=torch.ones(self.labels.shape, dtype=torch.bool)
+            self.mask=torch.ones(self.labels.shape)
 
         # Tensors with indices of the images per class
         self.num_labels = labels.max()+1
-        
 
     def __len__(self):
         return self.features.shape[0]
 
     def __getitem__(self, idx):
         # We return the indices of the event for visualization purpose."Label" is the class
-        return self.features[idx],  self.mask[idx], self.labels[idx]
+        return self.features[idx], self.mask[idx], self.labels[idx]
 
 
 class trippleHNonResonatModel(TransformerPredictor):
     def __init__(self,inputVarList=[],remark='',**kwargs):
         
         #print(kwargs)
-        self.inputVars=inputVarList
-        self.remark=remark
-        #self.model_dim = model_dim
-        #self.num_layers = num_layers
-        #head_dim = embed_dim // num_heads
         print("  Model Dims                 : ",kwargs['model_dim'])
         print("  Number of Heads in MHA     : ",kwargs['num_heads'])
         print("  Heads dim in MHA           : ",kwargs['model_dim']/kwargs['num_heads'])
         print("  Total Encoder layers  : ",kwargs['num_layers'])
+        self.inputVars=inputVarList
+        self.remark=remark
         super(trippleHNonResonatModel,self).__init__(**kwargs)
         
         # Output softmax
