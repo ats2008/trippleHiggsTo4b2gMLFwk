@@ -43,7 +43,7 @@ class trippleHNonResonatModel(TransformerPredictor):
         super(trippleHNonResonatModel,self).__init__(**kwargs)
         
         # Output softmax
-        self.descriminator_net = torch.nn.Softmax(dim=1)
+        #self.descriminator_net = torch.nn.Softmax(dim=1)
 
         self.save_hyperparameters()
 
@@ -64,7 +64,7 @@ class trippleHNonResonatModel(TransformerPredictor):
         if mask != None:
             mask=torch.bmm(torch.unsqueeze(mask,-1),torch.unsqueeze(mask,-2))
         x= super(trippleHNonResonatModel,self).forward(x,mask=mask, add_positional_encoding=add_positional_encoding)
-        x= self.descriminator_net(x)
+        #x= self.descriminator_net(x)
         return x
         
         
