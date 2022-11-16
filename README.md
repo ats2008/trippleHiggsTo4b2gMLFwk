@@ -2,7 +2,9 @@
 
 ML Framework for developing models for HHH-->4b 2g 
 
-Development was based on these [course notebooks](https://uvadlc-notebooks.readthedocs.io/en/latest/index.html).
+An multi head attention network is trained to distinguish jets coming from Higgs Bosons and from generic QCD jets produced at p-p collisions.
+
+A [neptune] based 
 
 ## Setup
 
@@ -21,7 +23,7 @@ We use root files as entry point for data via. [Uproot](https://uproot.readthedo
 Setting up a remote jupyter notebook session [ set it up of a machine with GPU support for quicker dev cycle ]
 ```bash 
 <local>  $ <login to server >
-<server> $ cd ~/work/g2Net/
+<server> $ cd <workdir>
 <server> $ jupyter notebook --no-browser --port=<PORT>  #change port number if the posrt is busy 
 ```
 
@@ -39,3 +41,4 @@ tensorboard --logdir <LOGDIR> --port=<PORT>  >& /dev/null &
 ```
 
 
+Development was based on these [course notebooks](https://uvadlc-notebooks.readthedocs.io/en/latest/index.html).
