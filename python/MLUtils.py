@@ -9,11 +9,13 @@ def printHead(text):
 def readDataset(dataFileNames,labelVars,
                 treeName='bkg_13TeV_TrippleHTag_0_background',
                 inputVarList=[],
+                otherVars={},
                 isvalidMaskVar=None,
                 NEVTS=-1,N_JETS=8):
     outputDset=None
     labels=None
     masks=None
+    otherVarsData={}
     print("Londing ", NEVTS,"events per file ")
     for tag in dataFileNames:
         print("Loading  : ",tag)
@@ -31,7 +33,9 @@ def readDataset(dataFileNames,labelVars,
                 
         dataDict=inputTree.arrays(inputVarList)
         inputData=pd.DataFrame.from_dict(dataDict).to_numpy()[:NEVTS]
+        inputData=torch.tensor(inputData)
         nCount=inputData.shape[0]
+        inputData=inputData.reshape(nCount,N_JETS,-1)
         
         for var in labelVars:
             if var not in inputTreeVars:
@@ -39,6 +43,20 @@ def readDataset(dataFileNames,labelVars,
             
         labelDict=inputTree.arrays(labelVars)
         labelData=pd.DataFrame.from_dict(labelDict).to_numpy(dtype='int')[:NEVTS]
+        labelData=torch.LongTensor(labelData)
+        labelData=labelData.reshape(nCount,-1,N_JETS).squeeze()
+        ##
+        _otherVarsData={}
+        for tag in otherVars:
+            for var in otherVars[tag]['var_names']:
+                if var not in inputTreeVars:
+                    print('\t : ',var," label not in the tree ",treeName," in file ",dataFileNames[tag])
+            _dict=inputTree.arrays(otherVars[tag]['var_names'])
+            if 'var_type' not in otherVars[tag]:
+                otherVars[tag]['var_type']='float'
+            _otherVarsData[tag]=pd.DataFrame.from_dict(_dict).to_numpy(dtype=otherVars[tag]['var_type'])[:NEVTS]
+            _otherVarsData[tag]=torch.tensor(_otherVarsData[tag])
+            _otherVarsData[tag]=_otherVarsData[tag].reshape(nCount,-1,len(otherVars[tag]['var_names'])).squeeze()
         
         maskData=None                                                    
         if isvalidMaskVar:
@@ -55,22 +73,19 @@ def readDataset(dataFileNames,labelVars,
         maskData=maskData.reshape(nCount,-1,N_JETS).squeeze()
         
         print("    evts  : ",nCount)
-        inputData=torch.tensor(inputData)
-        inputData=inputData.reshape(nCount,N_JETS,-1)
-        labelData=torch.LongTensor(labelData)
-        labelData=labelData.reshape(nCount,-1,N_JETS).squeeze()
                                                              
         if outputDset==None:
             outputDset=inputData
             labels=labelData
             masks=maskData
+            for tag in otherVars:
+                otherVarsData[tag]=_otherVarsData[tag]
         else:
             outputDset=torch.concat([outputDset,inputData],0)
             labels=torch.concat([labels,labelData ],0)
             masks=torch.concat([masks,maskData ],0)
+            for tag in otherVars:
+                otherVarsData[tag]=torch.concat([otherVarsData[tag],_otherVarsData[tag]])
         f.close()
         
-    return outputDset,labels,masks
-
-
-
+    return {'data':outputDset,'label':labels,'mask':masks,'otherVars' : otherVarsData }
