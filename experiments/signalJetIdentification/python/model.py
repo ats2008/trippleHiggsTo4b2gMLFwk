@@ -3,7 +3,7 @@ import torch.utils.data as data
 from TransformerModel import *
 
 class trippleHDataset(data.Dataset):
-    def __init__(self, features, labels,masks=None, train=True):
+    def __init__(self, features, labels,masks=None,extraVals=None, evaluation=True):
         """
         Inputs:
             features - Tensor of shape [num_evts, evt_dim]. Represents the high-level features.
@@ -13,11 +13,14 @@ class trippleHDataset(data.Dataset):
         super().__init__()
         self.features = features
         self.labels = labels
-        self.train = train
+        self.extraVals = extraVals
+        self.evaluation = evaluation
         self.mask = masks
         if masks==None:
             print("Initializing with default mask ")
             self.mask=torch.ones(self.labels.shape)
+        if extraVals is None:
+            self.extraVals={}
 
         # Tensors with indices of the images per class
         self.num_labels = labels.max()+1
@@ -25,8 +28,14 @@ class trippleHDataset(data.Dataset):
     def __len__(self):
         return self.features.shape[0]
 
+    def setEval(self,flag=True):
+        self.evaluation=flag   
+
     def __getitem__(self, idx):
         # We return the indices of the event for visualization purpose."Label" is the class
+        if self.evaluation:
+            return self.features[idx],self.mask[idx],self.labels[idx],{tag:self.extraVals[tag][idx] for tag in self.extraVals}
+            
         return self.features[idx], self.mask[idx], self.labels[idx]
 
 
@@ -43,7 +52,7 @@ class trippleHNonResonatModel(TransformerPredictor):
         super(trippleHNonResonatModel,self).__init__(**kwargs)
         
         # Output softmax
-        self.descriminator_net = torch.nn.Softmax(dim=1)
+#        self.descriminator_net = torch.nn.Softmax(dim=1)
 
         self.save_hyperparameters()
 
@@ -64,7 +73,7 @@ class trippleHNonResonatModel(TransformerPredictor):
         if mask != None:
             mask=torch.bmm(torch.unsqueeze(mask,-1),torch.unsqueeze(mask,-2))
         x= super(trippleHNonResonatModel,self).forward(x,mask=mask, add_positional_encoding=add_positional_encoding)
-        x= self.descriminator_net(x)
+#        x= self.descriminator_net(x)
         return x
         
         
