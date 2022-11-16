@@ -4,7 +4,7 @@ ML Framework for developing models for HHH-->4b 2g
 
 An multi head attention network is trained to distinguish jets coming from Higgs Bosons and from generic QCD jets produced at p-p collisions.
 
-A [neptune] based 
+A [neptune](https://app.neptune.ai/) based monitoring system is integrated to the framework for online monitoring of tarining step , logging evaluation mentics and plots and comparison studies 
 
 ## Setup
 
